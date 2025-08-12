@@ -37,7 +37,7 @@ echo "Compiling binaries for multiple platforms..."
 cd "$PROJECT_FOLDER" || exit >/dev/null 2>&1
 
 # Windows 32-bit
-COMMAND="GOOS=windows GOARCH=386 go build -o $RELEASE_DIR/${PROJECT_NAME}-windows-386.exe"
+COMMAND="GOOS=windows GOARCH=386 go build -o $RELEASE_DIR/${PROJECT_NAME}.exe"
 echo exec: "$COMMAND"
 if eval "$COMMAND"; then
     echo "Windows 32-bit binary compiled successfully."
