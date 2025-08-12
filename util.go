@@ -10,24 +10,7 @@ import (
 	"syscall"
 	"unsafe"
 
-	"github.com/Netpas/win"
 	"golang.org/x/sys/windows"
-)
-
-// https://learn.microsoft.com/en-us/windows/win32/api/sysinfoapi/ns-sysinfoapi-system_info#members
-const (
-	processorArchitectureIntel   = 0  // x86
-	processorArchitectureARM64   = 12 // ARM64
-	processorArchitectureAMD64   = 9  // x64
-	processorArchitectureUnknown = 0xFFFF
-)
-
-// https://learn.microsoft.com/en-us/windows/win32/sysinfo/image-file-machine-constants
-const (
-	imageFileMachineUnknown = 0
-	imageFileMachineI386    = 0x014c // x86
-	imageFileMachineAMD64   = 0x8664 // x64
-	imageFileMachineARM64   = 0xAA64 // ARM64
 )
 
 func isWin10AndAbove() bool {
@@ -76,6 +59,14 @@ func getOSArch() (string, error) {
 			return "", errors.New(callErr.Error())
 		}
 
+		// https://learn.microsoft.com/en-us/windows/win32/sysinfo/image-file-machine-constants
+		const (
+			imageFileMachineUnknown = 0
+			imageFileMachineI386    = 0x014c // x86
+			imageFileMachineAMD64   = 0x8664 // x64
+			imageFileMachineARM64   = 0xAA64 // ARM64
+		)
+
 		switch nativeMachine {
 		case imageFileMachineI386:
 			return "x86", nil
@@ -90,18 +81,52 @@ func getOSArch() (string, error) {
 		// GetNativeSystemInfo 返回的是系统的“逻辑架构”（仿真平台的宿主架构），而不是实际机器的物理 CPU, 在 ARM64 设备上，如果是通过 x86 程序调用，
 		// 它会认为自己是运行在 WOW64 模式下的 AMD64 系统上。如果希望在任何架构下都能判断出是否是 真正的 ARM64 物理 CPU，可以使用更底层的 API：
 		// IsWow64Process2（从 Windows 10 开始支持）
-		var systemInfo win.SYSTEM_INFO
-		win.GetNativeSystemInfo(&systemInfo)
+		type PROCESSOR_ARCH struct {
+			ProcessorArchitecture uint16
+			Reserved              uint16
+		}
 
-		switch systemInfo.WProcessorArchitecture {
-		case processorArchitectureAMD64:
+		type SYSTEM_INFO struct {
+			Arch                        PROCESSOR_ARCH
+			DwPageSize                  uint32
+			LpMinimumApplicationAddress uintptr
+			LpMaximumApplicationAddress uintptr
+			DwActiveProcessorMask       uint
+			DwNumberOfProcessors        uint32
+			DwProcessorType             uint32
+			DwAllocationGranularity     uint32
+			WProcessorLevel             uint16
+			WProcessorRevision          uint16
+		}
+
+		kernel32 := windows.NewLazySystemDLL("kernel32.dll")
+		procGetNativeSystemInfo := kernel32.NewProc("GetNativeSystemInfo")
+
+		var info SYSTEM_INFO
+		_, _, _ = procGetNativeSystemInfo.Call(uintptr(unsafe.Pointer(&info)))
+
+		// https://learn.microsoft.com/en-us/windows/win32/api/sysinfoapi/ns-sysinfoapi-system_info#members
+		const (
+			PROCESSOR_ARCHITECTURE_AMD64 = 9
+			PROCESSOR_ARCHITECTURE_ARM   = 5
+			PROCESSOR_ARCHITECTURE_ARM64 = 12
+			PROCESSOR_ARCHITECTURE_IA64  = 6
+			PROCESSOR_ARCHITECTURE_INTEL = 0
+		)
+
+		switch info.Arch.ProcessorArchitecture {
+		case PROCESSOR_ARCHITECTURE_AMD64:
 			return "x64", nil
-		case processorArchitectureIntel:
+		case PROCESSOR_ARCHITECTURE_INTEL:
 			return "x86", nil
-		case processorArchitectureARM64:
+		case PROCESSOR_ARCHITECTURE_ARM64:
 			return "arm64", nil
+		case PROCESSOR_ARCHITECTURE_ARM:
+			return "arm", nil
+		case PROCESSOR_ARCHITECTURE_IA64:
+			return "ia64", nil
 		default:
-			return "", fmt.Errorf("unknown (%d)", systemInfo.WProcessorArchitecture)
+			return "", fmt.Errorf("unknown (%d)", info.Arch.ProcessorArchitecture)
 		}
 	}
 }

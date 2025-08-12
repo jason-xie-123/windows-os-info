@@ -19,22 +19,36 @@ func main() {
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:  "action",
-				Usage: "support action: cpu_architecture / os_version / logicalDriveStrings / cpu_caption / cpu_NumberOfCores / cpu_NumberOfLogicalProcessors / memorychip_capacity / computersystem_totalphysicalmemory",
+				Usage: "support action: os_arch / os_version / cpu_num",
 			},
 		},
 		Action: func(c *cli.Context) error {
 			action := c.String("action")
 			if len(action) == 0 {
-				return fmt.Errorf("invalid value for --action: %s. Valid options are 'os_arch', 'os_version', 'cpu_Num'", action)
+				return fmt.Errorf("invalid value for --action: %s. Valid options are 'os_arch', 'os_version', 'cpu_num'", action)
 			}
 
 			if action == "os_arch" {
-
+				arch, err := getOSArch()
+				if err != nil {
+					return err
+				}
+				fmt.Print(arch)
 			} else if action == "os_version" {
-
-			} else if action == "cpu_Num" {
+				osVersion, err := GetOSVersion()
+				if err != nil {
+					return err
+				}
+				fmt.Print(osVersion)
+			} else if action == "cpu_num" {
+				cpuNum, err := getCPUNum()
+				if err != nil {
+					return err
+				} else {
+					fmt.Print(cpuNum)
+				}
 			} else {
-				return fmt.Errorf("invalid value for --action: %s. Valid options are 'os_arch', 'os_version', 'cpu_Num'", action)
+				return fmt.Errorf("invalid value for --action: %s. Valid options are 'os_arch', 'os_version', 'cpu_num'", action)
 			}
 
 			return nil

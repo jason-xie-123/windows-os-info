@@ -3,9 +3,8 @@ module windows-os-info
 go 1.20
 
 require (
-	github.com/Netpas/win v0.3.0
 	github.com/urfave/cli/v2 v2.27.4
-	golang.org/x/sys v0.35.0
+	golang.org/x/sys v0.30.0
 )
 
 require (
