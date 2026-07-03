@@ -1,0 +1,45 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.20'
+
+      - name: Verify release notes exist
+        run: |
+          if [ ! -s release_notes.md ]; then
+            echo "release_notes.md is missing or empty — draft it locally before tagging (see AGENTS.md)."
+            exit 1
+          fi
+
+      - name: Cross-compile binary
+        env:
+          GOOS: windows
+          GOARCH: 386
+        run: |
+          set -e
+          mkdir -p release
+          go build -ldflags '-w -s' -trimpath -o release/windows-os-info.exe ./cmd/windows-os-info
+          ls -lh release
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            --title "Release ${{ github.ref_name }}" \
+            --notes-file release_notes.md \
+            release/*
