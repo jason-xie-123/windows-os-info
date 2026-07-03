@@ -35,7 +35,7 @@ func GetOSVersion() (string, error) {
 }
 
 func getOSArch() (string, error) {
-	// IsWow64Process2（从 Windows 10 开始支持）
+	// IsWow64Process2 (supported since Windows 10)
 	if isWin10AndAbove() {
 		kernel32 := syscall.NewLazyDLL("kernel32.dll")
 		isWow64Process2 := kernel32.NewProc("IsWow64Process2")
@@ -78,9 +78,12 @@ func getOSArch() (string, error) {
 			return "", fmt.Errorf("unknown (0x%x)", nativeMachine)
 		}
 	} else {
-		// GetNativeSystemInfo 返回的是系统的“逻辑架构”（仿真平台的宿主架构），而不是实际机器的物理 CPU, 在 ARM64 设备上，如果是通过 x86 程序调用，
-		// 它会认为自己是运行在 WOW64 模式下的 AMD64 系统上。如果希望在任何架构下都能判断出是否是 真正的 ARM64 物理 CPU，可以使用更底层的 API：
-		// IsWow64Process2（从 Windows 10 开始支持）
+		// GetNativeSystemInfo reports the system's "logical architecture" (the emulation
+		// platform's host architecture), not the physical CPU of the actual machine. On an
+		// ARM64 device, an x86 process calling this will see itself as running under WOW64
+		// on an AMD64 system. To reliably detect the true physical ARM64 CPU on any
+		// architecture, use the lower-level API instead: IsWow64Process2 (supported since
+		// Windows 10).
 		type PROCESSOR_ARCH struct {
 			ProcessorArchitecture uint16
 			Reserved              uint16
