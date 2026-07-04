@@ -8,10 +8,11 @@ on:
 
 jobs:
   static-checks:
-    name: build / vet / lint (GOOS=windows on ubuntu-latest)
+    name: build / vet / lint (GOOS=windows/386 on ubuntu-latest)
     runs-on: ubuntu-latest
     env:
       GOOS: windows
+      GOARCH: 386
     steps:
       - uses: actions/checkout@v4
 

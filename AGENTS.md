@@ -4,7 +4,7 @@ Guidance for AI coding assistants (Claude Code, Codex, etc.) working in this rep
 
 ## This repo is Windows-only
 
-Every `.go` file in this repository carries a `//go:build windows` (and `// +build windows`) constraint. Any new source file you add MUST carry the same constraint unless you have a specific reason not to.
+Every `.go` file under `cmd/windows-os-info/` carries a `//go:build windows` (and `// +build windows`) constraint. Any new source file you add there MUST carry the same constraint unless you have a specific reason not to. `internal/version/version.go` is the one exception — it's a single platform-independent constant with no Windows-specific code, so it has no build tag.
 
 Implications for building/testing on a non-Windows machine:
 
