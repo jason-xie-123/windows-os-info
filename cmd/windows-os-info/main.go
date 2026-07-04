@@ -5,8 +5,8 @@ package main
 
 import (
 	"fmt"
+	packageVersion "github.com/jason-xie-123/windows-os-info/internal/version"
 	"os"
-	packageVersion "windows-os-info/internal/version"
 
 	"github.com/urfave/cli/v2"
 )

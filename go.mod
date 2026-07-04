@@ -1,4 +1,4 @@
-module windows-os-info
+module github.com/jason-xie-123/windows-os-info
 
 go 1.20
 
